@@ -1,0 +1,37 @@
+kivy components
+screenmanager
+	tabview
+		tab1
+			2col listbox
+				scrollview
+					gridlayout
+						label1/label2
+			button
+			labels
+			slidebox
+		tab2
+			matplot graphs
+			labels
+		tab3
+			rectangle
+			labels
+			button
+	actionscreens
+		newserving
+			enterboxes
+			button
+			labels
+		deleteserving
+			listbox
+			button
+		editstat
+			enterbox
+			button
+			label
+		newprofile
+			label
+			enterboxes
+			button
+		newprofconfirm
+			label
+			button
