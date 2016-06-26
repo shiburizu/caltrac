@@ -1,0 +1,189 @@
+<RootScreen>:
+	name: 'Root'
+	foodTable: foodTable
+	nameLbl: nameLbl
+	weightLbl: weightLbl
+	heightLbl: heightLbl
+	ageLbl: ageLbl
+	genderLbl: genderLbl
+	ratingLbl: ratingLbl
+	userPnl: userPnl
+	kcalTxt: kcalTxt
+	
+	RootTabs:
+		do_default_tab: False
+		
+		TabbedPanelItem:
+			text: 'Journal'
+			BoxLayout:
+				orientation: 'vertical'
+				ScrollView:
+					size_hint:(1,.7)
+					GridLayout:
+						size_hint_y: None
+						id: foodTable
+						cols: 2
+						row_force_default: True
+						row_default_height: 50
+						Button:
+							text: 'Items'
+						Button:
+							text: 'KCAL'
+				GridLayout:
+					cols: 2
+					size_hint:(1,.3)
+					BoxLayout:
+						size_hint_x: 0.4
+						orientation: 'vertical'
+						Button:
+							text: 'new'
+							on_press: root.manager.current = 'NewFood'
+						Button
+							text: 'delete'
+						Label:
+						Label:
+							text: 'I want to...'
+					BoxLayout:
+						size_hint_x: 0.6
+						orientation: 'vertical'
+						Label:
+							id: kcalTxt
+							text: 'Daily Kcal Recommendation: ' + str(int(float(app.caluser.getDict('bmr'))))
+						Label:
+						Label:
+							id: goalTxt
+							text: 'goal'
+						Spinner:
+							text: 'maintain'
+							values:('maintain','lose','gain')
+		TabbedPanelItem:
+			text: 'Stats'
+			GridLayout:
+				cols: 2
+				Label:
+					text: 'Graphs tab'
+		TabbedPanelItem:
+			id: userPnl
+			text: app.caluser.getDict('name')
+			BoxLayout:
+				orientation: 'vertical'
+				Label:
+					id: nameLbl
+					text: 'About ' + app.caluser.data['name']
+					font_size: '40sp'
+				Label:
+					id: heightLbl
+					text: 'Height: ' + app.caluser.getDict('height')
+				Label:
+					id: weightLbl
+					text: 'Weight: ' + app.caluser.getDict('weight')
+				Label:
+					id: ageLbl
+					text: 'Age: ' + app.caluser.getDict('age')
+				Label:
+					id: genderLbl
+					text: 'Gender: ' + app.caluser.getDict('gender')
+				Label:
+					id: ratingLbl
+					text: 'Rating: ' + app.caluser.getDict('rating')
+				Button:
+					text: 'Reconfigure'
+					on_press: root.manager.current = 'Profile'
+<NewFoodScreen>
+	name: 'NewFood'
+	GridLayout:
+		cols: 1
+		spacing: (0,30)
+		row_default_height: 30
+		row_force_default: True
+		padding: (100,100)
+
+		Label: 
+			text: 'Food name'
+		TextInput:
+			multiline: False
+			text: 'Food...'
+		Label:
+			text: 'Kcal count per serving...'
+		TextInput:
+			multiline: False
+			text: 'Kcal...'
+		Label:
+			text: 'Portion count'
+		TextInput:
+			multiline: False
+			text: 'Portion...'
+		Button:
+			text: 'Accept'
+		Button:
+			text: 'Cancel'
+			on_press: root.manager.current = 'Root'
+			
+<ProfileScreen>
+	name: 'Profile'
+	nameInp: nameInp
+	heightInp: heightInp
+	genderInp: genderInp
+	yearsInp: yearsInp
+	weightInp: weightInp
+	GridLayout:
+		cols: 1
+		spacing: (0,30)
+		row_default_height: 30
+		row_force_default: True
+		padding: (100,0)
+
+		
+		Label:
+			text: 'Enter your name'
+		TextInput:
+			text: 'Name...'
+			multiline: False
+			id: nameInp
+
+		Label:
+			text: 'Enter your height in cm.'
+		TextInput:
+			text: 'cm...'
+			multiline: False
+			id: heightInp
+		Label:
+			text: 'Enter your weight in Kg.'
+		TextInput:
+			text: 'kg...'
+			multiline: False
+			id: weightInp
+		Label:
+			text: 'Enter your age.'
+		TextInput:
+			text: 'years...'
+			multiline: False
+			id: yearsInp
+		Label:
+			text: 'Enter your gender.'
+		Spinner:
+			values: ('Male','Female')
+			text: 'Male'
+			id: genderInp
+		Button:
+			text: 'Accept'
+			on_press: root.setup2()
+
+<Profile2Screen>
+	name: 'Profile2'
+	rateSpn: rateSpn
+	GridLayout:
+		cols: 1
+		spacing: (0,50)
+		row_default_height: 30
+		row_force_default: True
+		padding: (100,100)
+		Label:
+			text: app.ratingText
+		Spinner:
+			id: rateSpn
+			values: ('1','2','3','4','5')
+			text: '1'
+		Button:
+			text: 'Confirm'
+			on_press: root.setup3()
