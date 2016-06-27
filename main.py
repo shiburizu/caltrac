@@ -15,6 +15,7 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
+from datetime import datetime, date
 import sqlite3 as sql
 import sys
 
@@ -85,13 +86,44 @@ class RootTabs(TabbedPanel):
 
 class RootScreen(Screen):
 	foodTable = ObjectProperty(None)
+	goalSpn = ObjectProperty(None)
 	
 	def __init__(self, **kwargs):
 		super(RootScreen, self).__init__(**kwargs)
 		self.foodTable.bind(minimum_height=self.foodTable.setter('height'))
-
+	
+	def goalUpdate(self,goal):
+		if goal == 'gain':
+			self.kcalTxt.text = 'Daily Kcal Recommendation: %s' % (int(float(CalApp.caluser.getDict('bmr'))) + 500)
+		elif goal == 'maintain':
+			self.kcalTxt.text = 'Daily Kcal Recommendation: %s' % int(float(CalApp.caluser.getDict('bmr')))
+		elif goal == 'lose':
+			t = int(float(CalApp.caluser.getDict('bmr'))) - 500
+			if t <= 1600:
+				self.kcalTxt.text = 'Daily Kcal Recommendation: 1600'
+			else:
+				self.kcalTxt.text = 'Daily Kcal Recommendation: %s' % (int(float(CalApp.caluser.getDict('bmr'))) - 500)
+	
+	
 class NewFoodScreen(Screen):
-	pass
+	foodInp = ObjectProperty(None)
+	kcalInp = ObjectProperty(None)
+	portionInp = ObjectProperty(None)
+	
+	def newFoodIns(self):
+		t = date.today()
+		try:
+			realKcal = float(self.kcalInp.text)*float(self.portionInp.text)
+			c.execute("INSERT INTO foods(name,date,kcal,portion) VALUES(?,?,?,?);",
+				(self.foodInp.text,t,realKcal,int(self.portionInp.text)))
+			db.commit()
+			CalApp.updateJournal()
+			CalApp.sm.current = 'Root'
+		except ValueError:
+			invalid = Popup(title='Invalid entries',
+				content=Label(text='Check your data and try again.'),
+				size_hint=(None, None),size=(250,150))
+			invalid.open()
 
 class ProfileScreen(Screen):
 	#objects defined in the kv must have a rule
@@ -156,6 +188,7 @@ class CaltracApp(App):
 	def on_start(self):
 		if self.caluser.p == [None,None,None,None,None,None]:
 			self.SetupProfile()
+		self.updateJournal()
 
 	def SetupProfile(self):
 		self.sm.current = 'Profile'
@@ -171,7 +204,19 @@ class CaltracApp(App):
 		self.Root.genderLbl.text = 'Gender: ' + self.caluser.getDict('gender')
 		self.Root.ratingLbl.text = 'Rating: ' + self.caluser.getDict('rating')
 		self.Root.kcalTxt.text = 'Daily Kcal Recommendation: ' + str(int(float(self.caluser.getDict('bmr'))))
-
 	
+	def updateJournal(self):
+		l = c.execute("SELECT * FROM foods WHERE date = ?", (date.isoformat(date.today()),)).fetchall()
+		self.Root.foodTable.clear_widgets()
+		self.Root.foodTable.add_widget(Button(text='Items'))
+		self.Root.foodTable.add_widget(Button(text='KCAL'))
+		for it in l:
+			self.Root.foodTable.add_widget(Label(text='%s - x%s' % (it[0],str(it[3]).replace('.0',''))))
+			self.Root.foodTable.add_widget(Label(text=str(it[2]).replace('.0','')))
+		t = list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()),)).fetchone())
+		t = t[0]; t = int(t) 
+		self.Root.totalTxt.text = 'Total kcal intake today: %s' % t
+		
+
 CalApp = CaltracApp()
 CalApp.run()

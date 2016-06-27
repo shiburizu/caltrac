@@ -9,6 +9,8 @@
 	ratingLbl: ratingLbl
 	userPnl: userPnl
 	kcalTxt: kcalTxt
+	totalTxt: totalTxt
+	goalSpn: goalSpn
 	
 	RootTabs:
 		do_default_tab: False
@@ -25,10 +27,6 @@
 						cols: 2
 						row_force_default: True
 						row_default_height: 50
-						Button:
-							text: 'Items'
-						Button:
-							text: 'KCAL'
 				GridLayout:
 					cols: 2
 					size_hint:(1,.3)
@@ -47,15 +45,17 @@
 						size_hint_x: 0.6
 						orientation: 'vertical'
 						Label:
+							id: totalTxt
+							text: 'TOTAL'
+						Label:
 							id: kcalTxt
 							text: 'Daily Kcal Recommendation: ' + str(int(float(app.caluser.getDict('bmr'))))
 						Label:
-						Label:
-							id: goalTxt
-							text: 'goal'
 						Spinner:
-							text: 'maintain'
-							values:('maintain','lose','gain')
+							id: goalSpn
+							values:['maintain','lose','gain']
+							text: self.values[0]
+							on_text: root.goalUpdate(self.text)
 		TabbedPanelItem:
 			text: 'Stats'
 			GridLayout:
@@ -91,6 +91,9 @@
 					on_press: root.manager.current = 'Profile'
 <NewFoodScreen>
 	name: 'NewFood'
+	foodInp: foodInp
+	kcalInp: kcalInp
+	portionInp: portionInp
 	GridLayout:
 		cols: 1
 		spacing: (0,30)
@@ -103,18 +106,22 @@
 		TextInput:
 			multiline: False
 			text: 'Food...'
+			id: foodInp
 		Label:
 			text: 'Kcal count per serving...'
 		TextInput:
 			multiline: False
 			text: 'Kcal...'
+			id: kcalInp
 		Label:
 			text: 'Portion count'
 		TextInput:
 			multiline: False
 			text: 'Portion...'
+			id: portionInp
 		Button:
 			text: 'Accept'
+			on_press: root.newFoodIns()
 		Button:
 			text: 'Cancel'
 			on_press: root.manager.current = 'Root'
