@@ -45,7 +45,6 @@ class User(object):
 				self.p.pop(0)
 				self.p.extend(None for i in range(len(self.p),6))
 				print self.p
-				
 				if None in self.p:
 					raise IndexError
 				self.data = {'raw':self.p,'name':self.p[0],'height':self.p[1],
