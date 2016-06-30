@@ -38,6 +38,7 @@
 							on_press: root.manager.current = 'NewFood'
 						Button
 							text: 'delete'
+							on_press: app.DeleteItems()
 						Label:
 						Label:
 							text: 'I want to...'
@@ -99,26 +100,24 @@
 		spacing: (0,30)
 		row_default_height: 30
 		row_force_default: True
-		padding: (100,100)
+		padding: (100,0)
 
 		Label: 
 			text: 'Food name'
 		TextInput:
 			multiline: False
-			text: 'Food...'
 			id: foodInp
 		Label:
 			text: 'Kcal count per serving...'
 		TextInput:
 			multiline: False
-			text: 'Kcal...'
 			id: kcalInp
 		Label:
 			text: 'Portion count'
 		TextInput:
 			multiline: False
-			text: 'Portion...'
 			id: portionInp
+		Label:
 		Button:
 			text: 'Accept'
 			on_press: root.newFoodIns()
@@ -168,6 +167,7 @@
 			values: ('Male','Female')
 			text: 'Male'
 			id: genderInp
+		Label:
 		Button:
 			text: 'Accept'
 			on_press: root.setup2()
@@ -178,7 +178,7 @@
 	GridLayout:
 		cols: 1
 		spacing: (0,50)
-		row_default_height: 30
+		row_default_height: 50
 		row_force_default: True
 		padding: (100,100)
 		Label:
@@ -190,3 +190,31 @@
 		Button:
 			text: 'Confirm'
 			on_press: root.setup3()
+		Button:
+			text: 'Cancel'
+			on_press: root.manager.current = 'Root'
+
+<DeleteScreen>
+	name: 'DeleteFood'
+	deleteTable: deleteTable
+	BoxLayout:
+		orientation: 'vertical'
+		Label:
+			text: 'Select the food you want to delete.'
+			size_hint:(1,.1)
+		ScrollView:
+			size_hint:(1,.8)
+			GridLayout:
+				size_hint_y: None
+				id: deleteTable
+				cols: 1
+				row_force_default: True
+				row_default_height: 50
+		Button:
+			size_hint:(1,.1)
+			text: 'Cancel'
+			on_press: root.manager.current= 'Root'
+
+<DelBtn@Button>
+	on_press: app.deleteEntry(self.id)
+	

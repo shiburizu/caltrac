@@ -7,7 +7,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
 from kivy.uix.tabbedpanel import TabbedPanel
-from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.properties import StringProperty, ObjectProperty
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.boxlayout import BoxLayout
@@ -17,7 +17,6 @@ from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from datetime import datetime, date
 import sqlite3 as sql
-import sys
 
 db = sql.connect('CalTrac.db',detect_types=sql.PARSE_DECLTYPES)
 c = db.cursor()
@@ -66,8 +65,6 @@ class User(object):
 				self.p = [None,None,None,None,None,None]
 				#Triggers new profile screen in calapp obj
 				
-	
-		
 	def updateProfile(self,inp):
 		c.execute("INSERT OR REPLACE INTO user(func,name,height,weight,age,gender,rating) VALUES('USER',?,?,?,?,?,?);",
 		(inp[0],inp[1],inp[2],inp[3],inp[4],inp[5]))
@@ -156,8 +153,28 @@ class Profile2Screen(Screen):
 		CalApp.inp.append(str(self.rateSpn.text))
 		CalApp.triggerUpdate()
 		CalApp.sm.current = 'Root'
+
+class DelBtn(Button):
+	pass
 		
-	
+class DeleteScreen(Screen):
+	deleteTable = ObjectProperty
+
+	def __init__(self, **kwargs):
+		super(DeleteScreen, self).__init__(**kwargs)
+		self.deleteTable.bind(minimum_height=self.deleteTable.setter('height'))
+
+	def listDelete(self):
+		l = c.execute("SELECT rowid, * FROM foods WHERE date = ?", (date.isoformat(date.today()),)).fetchall()
+
+		#list items in delete list with buttons
+		#give each button an id 
+		#when pressed search the local list for row number with that id.
+		self.deleteTable.clear_widgets()
+		for it in l:
+			self.deleteTable.add_widget(DelBtn(text='%s - x%s    kcal: %s' % (it[1],str(it[4]).replace('.0',''),str(it[3]).replace('.0','')),
+			id = str(it[0])))
+
 class CaltracApp(App):
 	ratingText = '''How would you describe the amount of exercise you do?
 1. Little to no exercise
@@ -178,10 +195,12 @@ class CaltracApp(App):
 		self.NewFood = NewFoodScreen()
 		self.Profile = ProfileScreen()
 		self.Profile2 = Profile2Screen()
+		self.DeleteScreen = DeleteScreen()
 		self.sm.add_widget(self.Root)
 		self.sm.add_widget(self.NewFood)
 		self.sm.add_widget(self.Profile)
 		self.sm.add_widget(self.Profile2)
+		self.sm.add_widget(self.DeleteScreen)
 		return self.sm
 
 	def on_start(self):
@@ -204,6 +223,10 @@ class CaltracApp(App):
 		self.Root.ratingLbl.text = 'Rating: ' + self.caluser.getDict('rating')
 		self.Root.kcalTxt.text = 'Daily Kcal Recommendation: ' + str(int(float(self.caluser.getDict('bmr'))))
 	
+	def DeleteItems(self):
+		self.DeleteScreen.listDelete()
+		self.sm.current = 'DeleteFood'
+	
 	def updateJournal(self):
 		l = c.execute("SELECT * FROM foods WHERE date = ?", (date.isoformat(date.today()),)).fetchall()
 		self.Root.foodTable.clear_widgets()
@@ -215,7 +238,12 @@ class CaltracApp(App):
 		t = list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()),)).fetchone())
 		t = t[0]; t = int(t) 
 		self.Root.totalTxt.text = 'Total kcal intake today: %s' % t
-		
+	
+	def deleteEntry(self,i):
+		c.execute("DELETE FROM foods WHERE rowid = ?", (i,))
+		db.commit()
+		self.updateJournal()
+		self.sm.current = 'Root'
 
 CalApp = CaltracApp()
 CalApp.run()
