@@ -3,6 +3,7 @@ Config.set('graphics','height',672)
 Config.set('graphics','width',480)
 
 from kivy.app import App
+from kivy.lang import Builder
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
@@ -17,6 +18,8 @@ from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from datetime import datetime, date
 import sqlite3 as sql
+
+Builder.load_file("Caltrac.kv")
 
 db = sql.connect('CalTrac.db',detect_types=sql.PARSE_DECLTYPES)
 c = db.cursor()
@@ -158,7 +161,7 @@ class DelBtn(Button):
 	pass
 		
 class DeleteScreen(Screen):
-	deleteTable = ObjectProperty
+	deleteTable = ObjectProperty(None)
 
 	def __init__(self, **kwargs):
 		super(DeleteScreen, self).__init__(**kwargs)
