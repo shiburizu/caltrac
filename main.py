@@ -19,7 +19,7 @@ from kivy.uix.label import Label
 from datetime import datetime, date
 import sqlite3 as sql
 
-Builder.load_file("Caltrac.kv")
+Builder.load_file("Cal.kv")
 
 db = sql.connect('CalTrac.db',detect_types=sql.PARSE_DECLTYPES)
 c = db.cursor()
