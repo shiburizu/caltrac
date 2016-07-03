@@ -28,6 +28,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS user(func TEXT UNIQUE, name TEXT,
  height REAL, weight REAL, age INTEGER, gender TEXT	, rating INTEGER);''')
 c.execute('''CREATE TABLE IF NOT EXISTS foods(name TEXT, date DATE, kcal REAL, 
 portion REAL);''')
+c.execute('''CREATE TABLE IF NOT EXISTS calendar(date TEXT UNIQUE, total REAL,
+ avg REAL, len INTEGER);''')
 
 class User(object):
 
@@ -232,14 +234,18 @@ class CaltracApp(App):
 	
 	def updateJournal(self):
 		l = c.execute("SELECT * FROM foods WHERE date = ?", (date.isoformat(date.today()),)).fetchall()
+		stats = []
 		self.Root.foodTable.clear_widgets()
 		self.Root.foodTable.add_widget(Button(text='Items'))
 		self.Root.foodTable.add_widget(Button(text='KCAL'))
 		for it in l:
 			self.Root.foodTable.add_widget(Label(text='%s - x%s' % (it[0],str(it[3]).replace('.0',''))))
 			self.Root.foodTable.add_widget(Label(text=str(it[2]).replace('.0','')))
-		t = list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()),)).fetchone())
-		t = t[0]; t = int(t) 
+			stats.append(it[2])
+		c.execute("INSERT OR REPLACE INTO calendar(date,total,avg,len) VALUES(?,?,?,?)",
+			(date.isoformat(date.today()),sum(stats),sum(stats)/len(stats),len(stats),))
+		db.commit()
+		t = int(list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()),)).fetchone())[0])
 		self.Root.totalTxt.text = 'Total kcal intake today: %s' % t
 	
 	def deleteEntry(self,i):
