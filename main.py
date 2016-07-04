@@ -16,7 +16,7 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import sqlite3 as sql
 
 Builder.load_file("Cal.kv")
@@ -87,7 +87,6 @@ class RootTabs(TabbedPanel):
 
 class RootScreen(Screen):
 	foodTable = ObjectProperty(None)
-	goalSpn = ObjectProperty(None)
 	
 	def __init__(self, **kwargs):
 		super(RootScreen, self).__init__(**kwargs)
@@ -107,9 +106,7 @@ class RootScreen(Screen):
 	
 	
 class NewFoodScreen(Screen):
-	foodInp = ObjectProperty(None)
-	kcalInp = ObjectProperty(None)
-	portionInp = ObjectProperty(None)
+
 	
 	def newFoodIns(self):
 		t = date.today()
@@ -127,14 +124,6 @@ class NewFoodScreen(Screen):
 			invalid.open()
 
 class ProfileScreen(Screen):
-	#objects defined in the kv must have a rule
-	#e.g. nameInp: nameInp
-	#that way None can be replaced by its instance.
-	nameInp = ObjectProperty(None)
-	heightInp = ObjectProperty(None)
-	weightInp = ObjectProperty(None)
-	yearsInp = ObjectProperty(None)
-	genderInp = ObjectProperty(None)
 
 	def setup2(self):
 		try:
@@ -242,9 +231,29 @@ class CaltracApp(App):
 			self.Root.foodTable.add_widget(Label(text='%s - x%s' % (it[0],str(it[3]).replace('.0',''))))
 			self.Root.foodTable.add_widget(Label(text=str(it[2]).replace('.0','')))
 			stats.append(it[2])
-		c.execute("INSERT OR REPLACE INTO calendar(date,total,avg,len) VALUES(?,?,?,?)",
-			(date.isoformat(date.today()),sum(stats),sum(stats)/len(stats),len(stats),))
+		try:
+			c.execute("INSERT OR REPLACE INTO calendar(date,total,avg,len) VALUES(?,?,?,?)",
+				(date.isoformat(date.today()),sum(stats),sum(stats)/len(stats),len(stats),))
+		except:
+			pass
 		db.commit()
+		#retrieve weekly
+		total = []; avg = []; items = []; # lists to use 
+		for i in xrange(1,7):
+			try:
+				total.append(c.execute("SELECT total FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
+				avg.append(c.execute("SELECT avg FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
+				items.append(c.execute("SELECT len FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
+			except:
+				pass #if it cant it means nothing could be found
+		avg = sum(avg)/len(items)
+		total = sum(total)
+		print total, avg, items
+		self.Root.weekTotalTxt.text = "Total calories this week: %s" % total
+		self.Root.weekAvgTxt.text = "Average per day: %s" % avg
+		self.Root.weekLenTxt.text = "Total items this week: %s" % len(items)
+
+		
 		t = int(list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()),)).fetchone())[0])
 		self.Root.totalTxt.text = 'Total kcal intake today: %s' % t
 	

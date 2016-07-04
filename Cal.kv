@@ -11,7 +11,12 @@
 	kcalTxt: kcalTxt
 	totalTxt: totalTxt
 	goalSpn: goalSpn
-	
+	weekTotalTxt: weekTotalTxt
+	weekAvgTxt: weekAvgTxt
+	weekLenTxt: weekLenTxt
+	monthTotalTxt: monthTotalTxt
+	monthAvgTxt: monthAvgTxt
+	monthLenTxt: monthLenTxt
 	RootTabs:
 		do_default_tab: False
 		
@@ -59,10 +64,34 @@
 							on_text: root.goalUpdate(self.text)
 		TabbedPanelItem:
 			text: 'Stats'
-			GridLayout:
-				cols: 2
-				Label:
-					text: 'Graphs tab'
+			BoxLayout:
+				orientation: 'vertical'
+				GridLayout:
+					cols: 1
+					Label:
+						text: 'Week at a glance...'
+					Label:
+						id: weekTotalTxt
+						text: 'week Total'
+					Label:
+						id: weekAvgTxt
+						text: 'week AVG'
+					Label:
+						id: weekLenTxt
+						text: 'week Len'
+				GridLayout:
+					cols: 1
+					Label:
+						text: 'Week at a glance...'
+					Label:
+						id: monthTotalTxt
+						text: 'month Total'
+					Label:
+						id: monthAvgTxt
+						text: 'month AVG'
+					Label:
+						id: monthLenTxt
+						text: 'month Len'
 		TabbedPanelItem:
 			id: userPnl
 			text: app.caluser.getDict('name')
