@@ -4,6 +4,7 @@ Config.set('graphics','width',480)
 
 from kivy.app import App
 from kivy.lang import Builder
+from graphing import * #modded Kivy.Graph module
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
@@ -238,20 +239,66 @@ class CaltracApp(App):
 			pass
 		db.commit()
 		#retrieve weekly
-		total = []; avg = []; items = []; # lists to use 
-		for i in xrange(1,7):
+		total = []; avg = []; items = []; pointlist = [] # lists to use 
+		#the following graph works through a workaround for an open issue with Kivy's Graph module. 
+		#https://github.com/kivy-garden/garden.graph/issues/7 follow this.
+		
+		weekGraph = Graph(xlabel='Days', ylabel='Calories',
+			x_ticks_major=1, y_ticks_major=1000, y_ticks_minor=500,
+			y_grid_label=True, x_grid_label=True,
+			x_grid=False, y_grid=True, xmin=0, xmax=7, ymin=0, ymax=5000)
+
+		weekplot = MeshStemPlot(color=[1, 0, 0, 1])
+		for i in xrange(8):
 			try:
 				total.append(c.execute("SELECT total FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
 				avg.append(c.execute("SELECT avg FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
 				items.append(c.execute("SELECT len FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
+				pointlist.append((i,float(c.execute("SELECT total FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])))
 			except:
-				pass #if it cant it means nothing could be found
+				total.append(0)
+				avg.append(0)
+				pointlist.append((i,0))
+
 		avg = sum(avg)/len(items)
 		total = sum(total)
-		print total, avg, items
-		self.Root.weekTotalTxt.text = "Total calories this week: %s" % total
+		self.Root.weekTotalTxt.text = "Total calories: %s" % total
 		self.Root.weekAvgTxt.text = "Average per day: %s" % avg
-		self.Root.weekLenTxt.text = "Total items this week: %s" % len(items)
+		self.Root.weekLenTxt.text = "Total items: %s" % sum(items)
+		weekplot.points = [(x[0],x[1]) for x in pointlist]
+		weekGraph.add_plot(weekplot)
+		self.Root.weekGraphLayout.clear_widgets()
+		self.Root.weekGraphLayout.add_widget(weekGraph)
+		
+		#monthly
+		total = []; avg = []; items = []; pointlist = []; # reset lists 
+		monthGraph = Graph(xlabel='Days', ylabel='Calories',
+			x_ticks_major=5,x_ticks_minor=1, y_ticks_major=1000, y_ticks_minor=500,
+			y_grid_label=True, x_grid_label=True,
+			x_grid=True, y_grid=True, xmin=0, xmax=30, ymin=0, ymax=5000)
+			
+		monthplot = SmoothLinePlot(color=[1, 0, 0, 1])
+
+		for i in xrange(31):
+			try:
+				total.append(c.execute("SELECT total FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
+				avg.append(c.execute("SELECT avg FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
+				items.append(c.execute("SELECT len FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
+				pointlist.append((i,float(c.execute("SELECT total FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])))			
+			except:
+				total.append(0)
+				avg.append(0)
+				#if it cant it means nothing could be found
+				pointlist.append((i,0))
+		avg = sum(avg)/len(items)
+		total = sum(total)
+		self.Root.monthTotalTxt.text = "Total calories: %s" % total
+		self.Root.monthAvgTxt.text = "Average per day: %s" % avg
+		self.Root.monthLenTxt.text = "Total items: %s" % sum(items)
+		monthplot.points = [(x[0],x[1]) for x in pointlist]
+		monthGraph.add_plot(monthplot)
+		self.Root.monthGraphLayout.clear_widgets()
+		self.Root.monthGraphLayout.add_widget(monthGraph)
 
 		
 		t = int(list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()),)).fetchone())[0])

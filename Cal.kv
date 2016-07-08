@@ -1,6 +1,8 @@
 <RootScreen>:
+	
 	name: 'Root'
 	foodTable: foodTable
+
 	nameLbl: nameLbl
 	weightLbl: weightLbl
 	heightLbl: heightLbl
@@ -17,6 +19,9 @@
 	monthTotalTxt: monthTotalTxt
 	monthAvgTxt: monthAvgTxt
 	monthLenTxt: monthLenTxt
+	weekGraphLayout: weekGraphLayout
+	monthGraphLayout: monthGraphLayout
+	
 	RootTabs:
 		do_default_tab: False
 		
@@ -67,31 +72,41 @@
 			BoxLayout:
 				orientation: 'vertical'
 				GridLayout:
-					cols: 1
-					Label:
-						text: 'Week at a glance...'
-					Label:
-						id: weekTotalTxt
-						text: 'week Total'
-					Label:
-						id: weekAvgTxt
-						text: 'week AVG'
-					Label:
-						id: weekLenTxt
-						text: 'week Len'
+					cols: 2
+					BoxLayout:
+						orientation: 'vertical'
+						Label:
+							text: 'Past 7 days at a glance...'
+						Label:
+							id: weekTotalTxt
+							text: 'week Total'
+						Label:
+							id: weekAvgTxt
+							text: 'week AVG'
+						Label:
+							id: weekLenTxt
+							text: 'week Len'
+					BoxLayout:
+						orientation: 'vertical'	
+						id: weekGraphLayout
 				GridLayout:
-					cols: 1
-					Label:
-						text: 'Week at a glance...'
-					Label:
-						id: monthTotalTxt
-						text: 'month Total'
-					Label:
-						id: monthAvgTxt
-						text: 'month AVG'
-					Label:
-						id: monthLenTxt
-						text: 'month Len'
+					cols: 2
+					BoxLayout:
+						orientation: 'vertical'
+						Label:
+							text: 'Past 30 days at a glance...'
+						Label:
+							id: monthTotalTxt
+							text: 'month Total'
+						Label:
+							id: monthAvgTxt
+							text: 'month AVG'
+						Label:
+							id: monthLenTxt
+							text: 'month Len'
+					BoxLayout:
+						orientation: 'vertical'	
+						id: monthGraphLayout
 		TabbedPanelItem:
 			id: userPnl
 			text: app.caluser.getDict('name')
