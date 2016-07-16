@@ -22,6 +22,7 @@
 	weekGraphLayout: weekGraphLayout
 	monthGraphLayout: monthGraphLayout
 	dateLbl: dateLbl
+	tmrwBtn: tmrwBtn
 	
 	RootTabs:
 		do_default_tab: False
@@ -41,8 +42,10 @@
 						text: 'Today'
 						on_press: app.deltaReset()
 					Button:
+						id: tmrwBtn
 						text: 'Tomorrow'
 						on_press: app.deltaUpdate(-1)
+						disabled: True
 					Label:
 						id: dateLbl
 						text: 'DATE'

@@ -186,7 +186,10 @@ class CaltracApp(App):
 			stats.append(it[2])
 		
 		self.Root.dateLbl.text = date.isoformat(date.today() - timedelta(delta))
-		
+		if delta != 0:
+			self.Root.tmrwBtn.disabled = False
+		else:
+			self.Root.tmrwBtn.disabled = True
 		try:
 			c.execute("INSERT OR REPLACE INTO calendar(date,total,avg,len) VALUES(?,?,?,?)",
 				(date.isoformat(date.today()-timedelta(delta)),sum(stats),sum(stats)/len(stats),len(stats),))
