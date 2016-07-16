@@ -21,6 +21,7 @@
 	monthLenTxt: monthLenTxt
 	weekGraphLayout: weekGraphLayout
 	monthGraphLayout: monthGraphLayout
+	dateLbl: dateLbl
 	
 	RootTabs:
 		do_default_tab: False
@@ -29,8 +30,24 @@
 			text: 'Journal'
 			BoxLayout:
 				orientation: 'vertical'
+				GridLayout:
+					size_hint_y: .05
+					cols: 4
+
+					Button:
+						text: 'Yesterday'
+						on_press: app.deltaUpdate(1)
+					Button:
+						text: 'Today'
+						on_press: app.deltaReset()
+					Button:
+						text: 'Tomorrow'
+						on_press: app.deltaUpdate(-1)
+					Label:
+						id: dateLbl
+						text: 'DATE'
 				ScrollView:
-					size_hint:(1,.7)
+					size_hint:(1,.65)
 					GridLayout:
 						size_hint_y: None
 						id: foodTable
@@ -48,7 +65,7 @@
 							on_press: root.manager.current = 'NewFood'
 						Button
 							text: 'delete'
-							on_press: app.DeleteItems()
+							on_press: app.DeleteItems(app.dayDelta)
 						Label:
 						Label:
 							text: 'I want to...'
@@ -164,7 +181,7 @@
 		Label:
 		Button:
 			text: 'Accept'
-			on_press: root.newFoodIns()
+			on_press: root.newFoodIns(app.dayDelta)
 		Button:
 			text: 'Cancel'
 			on_press: root.manager.current = 'Root'

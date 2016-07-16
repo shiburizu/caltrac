@@ -32,11 +32,11 @@ class RootTabs(TabbedPanel):
 
 class RootScreen(Screen):
 	foodTable = ObjectProperty(None)
-	
+
 	def __init__(self, **kwargs):
 		super(RootScreen, self).__init__(**kwargs)
 		self.foodTable.bind(minimum_height=self.foodTable.setter('height'))
-	
+		self.dateLbl.text = date.isoformat(date.today())
 	def goalUpdate(self,goal):
 		if goal == 'gain':
 			self.kcalTxt.text = 'Daily Kcal Recommendation: %s' % (int(float(CalApp.caluser.getDict('bmr'))) + 500)
@@ -49,18 +49,17 @@ class RootScreen(Screen):
 			else:
 				self.kcalTxt.text = 'Daily Kcal Recommendation: %s' % (int(float(CalApp.caluser.getDict('bmr'))) - 500)
 	
-	
 class NewFoodScreen(Screen):
 
 	
-	def newFoodIns(self):
-		t = date.today()
+	def newFoodIns(self,delta):
+		t = date.today() - timedelta(delta)
 		try:
 			realKcal = float(self.kcalInp.text)*float(self.portionInp.text)
 			c.execute("INSERT INTO foods(name,date,kcal,portion) VALUES(?,?,?,?);",
 				(self.foodInp.text,t,realKcal,int(self.portionInp.text)))
 			db.commit()
-			CalApp.updateJournal()
+			CalApp.updateJournal(delta)
 			CalApp.sm.current = 'Root'
 		except ValueError:
 			invalid = Popup(title='Invalid entries',
@@ -103,8 +102,8 @@ class DeleteScreen(Screen):
 		super(DeleteScreen, self).__init__(**kwargs)
 		self.deleteTable.bind(minimum_height=self.deleteTable.setter('height'))
 
-	def listDelete(self):
-		l = c.execute("SELECT rowid, * FROM foods WHERE date = ?", (date.isoformat(date.today()),)).fetchall()
+	def listDelete(self,delta):
+		l = c.execute("SELECT rowid, * FROM foods WHERE date = ?", (date.isoformat(date.today() - timedelta(delta)),)).fetchall()
 
 		#list items in delete list with buttons
 		#give each button an id 
@@ -129,6 +128,7 @@ class CaltracApp(App):
 
 	def build(self):
 		self.caluser = User()
+		self.dayDelta = 0
 
 		self.Root = RootScreen()
 		self.NewFood = NewFoodScreen()
@@ -146,6 +146,14 @@ class CaltracApp(App):
 		if self.caluser.p == [None,None,None,None,None,None]:
 			self.SetupProfile()
 		self.updateJournal()
+		
+	def deltaUpdate(self,val):
+		self.dayDelta += val
+		self.updateJournal(self.dayDelta)
+	
+	def deltaReset(self):
+		self.dayDelta = 0
+		self.updateJournal()
 
 	def SetupProfile(self):
 		self.sm.current = 'Profile'
@@ -162,12 +170,12 @@ class CaltracApp(App):
 		self.Root.ratingLbl.text = 'Rating: ' + self.caluser.getDict('rating')
 		self.Root.kcalTxt.text = 'Daily Kcal Recommendation: ' + str(int(float(self.caluser.getDict('bmr'))))
 	
-	def DeleteItems(self):
-		self.DeleteScreen.listDelete()
+	def DeleteItems(self,delta):
+		self.DeleteScreen.listDelete(delta)
 		self.sm.current = 'DeleteFood'
 	
-	def updateJournal(self):
-		l = c.execute("SELECT * FROM foods WHERE date = ?", (date.isoformat(date.today()),)).fetchall()
+	def updateJournal(self,delta=0):
+		l = c.execute("SELECT * FROM foods WHERE date = ?", (date.isoformat(date.today()-timedelta(delta)),)).fetchall()
 		stats = []
 		self.Root.foodTable.clear_widgets()
 		self.Root.foodTable.add_widget(Button(text='Items'))
@@ -176,9 +184,12 @@ class CaltracApp(App):
 			self.Root.foodTable.add_widget(Label(text='%s - x%s' % (it[0],str(it[3]).replace('.0',''))))
 			self.Root.foodTable.add_widget(Label(text=str(it[2]).replace('.0','')))
 			stats.append(it[2])
+		
+		self.Root.dateLbl.text = date.isoformat(date.today() - timedelta(delta))
+		
 		try:
 			c.execute("INSERT OR REPLACE INTO calendar(date,total,avg,len) VALUES(?,?,?,?)",
-				(date.isoformat(date.today()),sum(stats),sum(stats)/len(stats),len(stats),))
+				(date.isoformat(date.today()-timedelta(delta)),sum(stats),sum(stats)/len(stats),len(stats),))
 		except:
 			pass
 		db.commit()
@@ -250,13 +261,13 @@ class CaltracApp(App):
 		self.Root.monthGraphLayout.add_widget(monthGraph)
 
 		
-		t = int(list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()),)).fetchone())[0])
+		t = int(list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()-timedelta(delta)),)).fetchone())[0])
 		self.Root.totalTxt.text = 'Total kcal intake today: %s' % t
 	
 	def deleteEntry(self,i):
 		c.execute("DELETE FROM foods WHERE rowid = ?", (i,))
 		db.commit()
-		self.updateJournal()
+		self.updateJournal(self.dayDelta)
 		self.sm.current = 'Root'
 
 CalApp = CaltracApp()
