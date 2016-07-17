@@ -12,7 +12,6 @@
 	userPnl: userPnl
 	kcalTxt: kcalTxt
 	totalTxt: totalTxt
-	goalSpn: goalSpn
 	weekTotalTxt: weekTotalTxt
 	weekAvgTxt: weekAvgTxt
 	weekLenTxt: weekLenTxt
@@ -32,34 +31,38 @@
 			BoxLayout:
 				orientation: 'vertical'
 				GridLayout:
-					size_hint_y: .05
+					size_hint_y: .1
 					cols: 4
 
 					Button:
 						text: 'Yesterday'
 						on_press: app.deltaUpdate(1)
+						font_size: '12sp'
 					Button:
 						text: 'Today'
 						on_press: app.deltaReset()
+						font_size: '12sp'
 					Button:
 						id: tmrwBtn
 						text: 'Tomorrow'
 						on_press: app.deltaUpdate(-1)
 						disabled: True
+						font_size: '12sp'
 					Label:
 						id: dateLbl
 						text: 'DATE'
+						font_size: '12sp'
 				ScrollView:
-					size_hint:(1,.65)
+					size_hint:(1,.6)
 					GridLayout:
 						size_hint_y: None
 						id: foodTable
 						cols: 2
 						row_force_default: True
-						row_default_height: 50
+						row_default_height: '50dp'
 				GridLayout:
 					cols: 2
-					size_hint:(1,.3)
+					size_hint:(1,.15)
 					BoxLayout:
 						size_hint_x: 0.4
 						orientation: 'vertical'
@@ -69,9 +72,7 @@
 						Button
 							text: 'delete'
 							on_press: app.DeleteItems(app.dayDelta)
-						Label:
-						Label:
-							text: 'I want to...'
+
 					BoxLayout:
 						size_hint_x: 0.6
 						orientation: 'vertical'
@@ -80,53 +81,77 @@
 							text: 'TOTAL'
 						Label:
 							id: kcalTxt
-							text: 'Daily Kcal Recommendation: ' + str(int(float(app.caluser.getDict('bmr'))))
-						Label:
-						Spinner:
-							id: goalSpn
-							values:['maintain','lose','gain']
-							text: self.values[0]
-							on_text: root.goalUpdate(self.text)
+							text: 'Kcal target: ' + str(int(float(app.caluser.getDict('bmr'))))
+
+				Label:
+					text: 'I want to...'
+					size_hint_y: 0.05
+				GridLayout:
+					cols: 3
+					size_hint_y: 0.1
+					ToggleButton:
+						text: 'lose'
+						on_press: root.goalUpdate(self.text)
+						group: 'goals'
+					ToggleButton:
+						text: 'maintain'
+						on_press: root.goalUpdate(self.text)
+						group: 'goals'
+						state: 'down'
+					ToggleButton:
+						text: 'gain'
+						on_press: root.goalUpdate(self.text)
+						group: 'goals'
 		TabbedPanelItem:
 			text: 'Stats'
 			BoxLayout:
 				orientation: 'vertical'
 				GridLayout:
-					cols: 2
-					BoxLayout:
-						orientation: 'vertical'
-						Label:
-							text: 'Past 7 days at a glance...'
-						Label:
-							id: weekTotalTxt
-							text: 'week Total'
-						Label:
-							id: weekAvgTxt
-							text: 'week AVG'
-						Label:
-							id: weekLenTxt
-							text: 'week Len'
-					BoxLayout:
-						orientation: 'vertical'	
-						id: weekGraphLayout
+					cols: 1
+					Accordion:
+						AccordionItem:
+							title: '7-day Numbers'
+							BoxLayout:
+								orientation: 'vertical'
+								Label:
+									text: 'Past 7 days at a glance...'
+								Label:
+									id: weekTotalTxt
+									text: 'week Total'
+								Label:
+									id: weekAvgTxt
+									text: 'week AVG'
+								Label:
+									id: weekLenTxt
+									text: 'week Len'
+						AccordionItem:
+							title: '7-day Graph'
+							BoxLayout:
+								orientation: 'vertical'	
+								id: weekGraphLayout
 				GridLayout:
-					cols: 2
-					BoxLayout:
-						orientation: 'vertical'
-						Label:
-							text: 'Past 30 days at a glance...'
-						Label:
-							id: monthTotalTxt
-							text: 'month Total'
-						Label:
-							id: monthAvgTxt
-							text: 'month AVG'
-						Label:
-							id: monthLenTxt
-							text: 'month Len'
-					BoxLayout:
-						orientation: 'vertical'	
-						id: monthGraphLayout
+					cols: 1
+					Accordion:
+						AccordionItem:
+							title: '30-day Numbers'
+							BoxLayout:
+								orientation: 'vertical'
+								Label:
+									text: 'Past 30 days at a glance...'
+								Label:
+									id: monthTotalTxt
+									text: 'month Total'
+								Label:
+									id: monthAvgTxt
+									text: 'month AVG'
+								Label:
+									id: monthLenTxt
+									text: 'month Len'
+						AccordionItem:
+							title: '30-day Graph'
+							BoxLayout:
+								orientation: 'vertical'	
+								id: monthGraphLayout
 		TabbedPanelItem:
 			id: userPnl
 			text: app.caluser.getDict('name')
@@ -161,11 +186,10 @@
 	portionInp: portionInp
 	GridLayout:
 		cols: 1
-		spacing: (0,30)
-		row_default_height: 30
+		spacing: ('0dp','10dp')
+		row_default_height: '30dp'
 		row_force_default: True
-		padding: (100,0)
-
+		padding: ('50dp','0dp')
 		Label: 
 			text: 'Food name'
 		TextInput:
@@ -198,12 +222,9 @@
 	weightInp: weightInp
 	GridLayout:
 		cols: 1
-		spacing: (0,20)
-		row_default_height: 35
-		row_force_default: True
-		padding: (100,0)
-
-		
+		padding: ('50dp','0dp')
+		spacing: ('0dp','10dp')
+		row_default_height: '30dp'
 		Label:
 			text: 'Enter your name'
 		TextInput:
@@ -231,22 +252,24 @@
 			values: ('Male','Female')
 			text: 'Male'
 			id: genderInp
-		Label:
 		Button:
 			text: 'Accept'
 			on_press: root.setup2()
-
 <Profile2Screen>
 	name: 'Profile2'
 	rateSpn: rateSpn
 	GridLayout:
 		cols: 1
-		spacing: (0,50)
-		row_default_height: 50
-		row_force_default: True
-		padding: (100,100)
+		spacing: ('0dp','50dp')
+		padding: ('50dp','100dp')
 		Label:
 			text: app.ratingText
+			font_size: '15sp'
+			text_size: root.width, None
+			size: self.texture_size
+			padding_x: '10dp'
+		Label:
+			
 		Spinner:
 			id: rateSpn
 			values: ('1','2','3','4','5')
@@ -254,10 +277,6 @@
 		Button:
 			text: 'Confirm'
 			on_press: root.setup3()
-		Button:
-			text: 'Cancel'
-			on_press: root.manager.current = 'Root'
-
 <DeleteScreen>
 	name: 'DeleteFood'
 	deleteTable: deleteTable
@@ -273,7 +292,7 @@
 				id: deleteTable
 				cols: 1
 				row_force_default: True
-				row_default_height: 50
+				row_default_height: '50dp'
 		Button:
 			size_hint:(1,.1)
 			text: 'Cancel'

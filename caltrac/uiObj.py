@@ -1,7 +1,6 @@
 from kivy.config import Config
-Config.set('graphics','height',672)
-Config.set('graphics','width',480)
-
+from kivy.core.window import Window
+Window.softinput_mode = 'below_target'
 from kivy.app import App
 from kivy.lang import Builder
 from graphing import * #modded Kivy.Graph module
@@ -39,19 +38,17 @@ class RootScreen(Screen):
 		self.dateLbl.text = date.isoformat(date.today())
 	def goalUpdate(self,goal):
 		if goal == 'gain':
-			self.kcalTxt.text = 'Daily Kcal Recommendation: %s' % (int(float(CalApp.caluser.getDict('bmr'))) + 500)
+			self.kcalTxt.text = 'Kcal target: %s' % (int(float(CalApp.caluser.getDict('bmr'))) + 500)
 		elif goal == 'maintain':
-			self.kcalTxt.text = 'Daily Kcal Recommendation: %s' % int(float(CalApp.caluser.getDict('bmr')))
+			self.kcalTxt.text = 'Kcal target: %s' % int(float(CalApp.caluser.getDict('bmr')))
 		elif goal == 'lose':
 			t = int(float(CalApp.caluser.getDict('bmr'))) - 500
 			if t <= 1600:
-				self.kcalTxt.text = 'Daily Kcal Recommendation: 1600'
+				self.kcalTxt.text = 'Kcal target: 1600'
 			else:
-				self.kcalTxt.text = 'Daily Kcal Recommendation: %s' % (int(float(CalApp.caluser.getDict('bmr'))) - 500)
+				self.kcalTxt.text = 'Kcal target: %s' % (int(float(CalApp.caluser.getDict('bmr'))) - 500)
 	
 class NewFoodScreen(Screen):
-
-	
 	def newFoodIns(self,delta):
 		t = date.today() - timedelta(delta)
 		try:
@@ -64,7 +61,7 @@ class NewFoodScreen(Screen):
 		except ValueError:
 			invalid = Popup(title='Invalid entries',
 				content=Label(text='Check your data and try again.'),
-				size_hint=(None, None),size=(250,150))
+				size_hint=(None, None),size=('250dp','150dp'))
 			invalid.open()
 
 class ProfileScreen(Screen):
@@ -81,7 +78,7 @@ class ProfileScreen(Screen):
 		except (TypeError,ValueError) as e:
 			invalid = Popup(title='Invalid entries',
 				content=Label(text='Check your data and try again.'),
-				size_hint=(None, None),size=(250,150))
+				size_hint=(None, None),size=('250dp','150dp'))
 			invalid.open()
 
 class Profile2Screen(Screen):
@@ -104,32 +101,26 @@ class DeleteScreen(Screen):
 
 	def listDelete(self,delta):
 		l = c.execute("SELECT rowid, * FROM foods WHERE date = ?", (date.isoformat(date.today() - timedelta(delta)),)).fetchall()
-
-		#list items in delete list with buttons
-		#give each button an id 
-		#when pressed search the local list for row number with that id.
 		self.deleteTable.clear_widgets()
 		for it in l:
 			self.deleteTable.add_widget(DelBtn(text='%s - x%s    kcal: %s' % (it[1],str(it[4]).replace('.0',''),str(it[3]).replace('.0','')),
 			id = str(it[0])))
 
 class CaltracApp(App):
-	ratingText = '''How would you describe the amount of exercise you do?
-1. Little to no exercise
-2. Light exercise(1-3 days per week)
-3. Moderate exercise(3-5 days per week)
-4. Heavy exercise(6-7 days per week)
-5. Very heavy exercise(twice per day, extra heavy workouts)'''
-	sm = ScreenManager()
-	inp = []
-	
 	def __init__(self, **kwargs):
 		super(CaltracApp, self).__init__(**kwargs)
+		self.sm = ScreenManager()
+		self.inp = []
+		self.ratingText = '''How would you describe the amount of exercise you do?
+1. Little to no exercise
+2. Light exercise (1-3 days per week)
+3. Moderate exercise (3-5 days per week)
+4. Heavy exercise (6-7 days per week)
+5. Very heavy exercise (twice per day, extra heavy workouts)'''
 
 	def build(self):
 		self.caluser = User()
 		self.dayDelta = 0
-
 		self.Root = RootScreen()
 		self.NewFood = NewFoodScreen()
 		self.Profile = ProfileScreen()
@@ -168,7 +159,7 @@ class CaltracApp(App):
 		self.Root.ageLbl.text = 'Age: ' + self.caluser.getDict('age')
 		self.Root.genderLbl.text = 'Gender: ' + self.caluser.getDict('gender')
 		self.Root.ratingLbl.text = 'Rating: ' + self.caluser.getDict('rating')
-		self.Root.kcalTxt.text = 'Daily Kcal Recommendation: ' + str(int(float(self.caluser.getDict('bmr'))))
+		self.Root.kcalTxt.text = 'Kcal target: ' + str(int(float(self.caluser.getDict('bmr'))))
 	
 	def DeleteItems(self,delta):
 		self.DeleteScreen.listDelete(delta)
@@ -184,7 +175,6 @@ class CaltracApp(App):
 			self.Root.foodTable.add_widget(Label(text='%s - x%s' % (it[0],str(it[3]).replace('.0',''))))
 			self.Root.foodTable.add_widget(Label(text=str(it[2]).replace('.0','')))
 			stats.append(it[2])
-		
 		self.Root.dateLbl.text = date.isoformat(date.today() - timedelta(delta))
 		if delta != 0:
 			self.Root.tmrwBtn.disabled = False
@@ -198,16 +188,12 @@ class CaltracApp(App):
 		db.commit()
 		#retrieve weekly
 		total = []; avg = []; items = []; pointlist = [] # lists to use 
-		#the following graph works through a workaround for an open issue with Kivy's Graph module. 
-		#https://github.com/kivy-garden/garden.graph/issues/7 follow this.
-		
 		weekGraph = Graph(xlabel='Days', ylabel='Calories',
 			x_ticks_major=1, y_ticks_major=1000, y_ticks_minor=500,
 			y_grid_label=True, x_grid_label=True,
-			x_grid=False, y_grid=True, xmin=0, xmax=7, ymin=0, ymax=5000)
-
+			x_grid=False, y_grid=True, xmin=1, xmax=7, ymin=0, ymax=5000)
 		weekplot = MeshStemPlot(color=[1, 0, 0, 1])
-		for i in xrange(8):
+		for i in xrange(1,8):
 			try:
 				total.append(c.execute("SELECT total FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
 				avg.append(c.execute("SELECT avg FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
@@ -229,17 +215,14 @@ class CaltracApp(App):
 		weekGraph.add_plot(weekplot)
 		self.Root.weekGraphLayout.clear_widgets()
 		self.Root.weekGraphLayout.add_widget(weekGraph)
-		
 		#monthly
 		total = []; avg = []; items = []; pointlist = []; # reset lists 
 		monthGraph = Graph(xlabel='Days', ylabel='Calories',
-			x_ticks_major=5,x_ticks_minor=1, y_ticks_major=1000, y_ticks_minor=500,
+			x_ticks_major=7,x_ticks_minor=1, y_ticks_major=1000, y_ticks_minor=500,
 			y_grid_label=True, x_grid_label=True,
-			x_grid=True, y_grid=True, xmin=0, xmax=30, ymin=0, ymax=5000)
-			
+			x_grid=True, y_grid=True, xmin=1, xmax=30, ymin=0, ymax=5000)
 		monthplot = SmoothLinePlot(color=[1, 0, 0, 1])
-
-		for i in xrange(31):
+		for i in xrange(1,31):
 			try:
 				total.append(c.execute("SELECT total FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
 				avg.append(c.execute("SELECT avg FROM calendar WHERE date = ?",(date.isoformat(date.today()- timedelta(i)),)).fetchall()[0][0])
@@ -253,7 +236,7 @@ class CaltracApp(App):
 		try:
 			avg = sum(avg)/len(items)
 		except:
-			acg = 'No data.'
+			avg = 'No data.'
 		total = sum(total)
 		self.Root.monthTotalTxt.text = "Total calories: %s" % total
 		self.Root.monthAvgTxt.text = "Average per day: %s" % avg
@@ -262,11 +245,8 @@ class CaltracApp(App):
 		monthGraph.add_plot(monthplot)
 		self.Root.monthGraphLayout.clear_widgets()
 		self.Root.monthGraphLayout.add_widget(monthGraph)
-
-		
 		t = int(list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()-timedelta(delta)),)).fetchone())[0])
-		self.Root.totalTxt.text = 'Total kcal intake today: %s' % t
-	
+		self.Root.totalTxt.text = 'Kcal intake: %s' % t
 	def deleteEntry(self,i):
 		c.execute("DELETE FROM foods WHERE rowid = ?", (i,))
 		db.commit()
