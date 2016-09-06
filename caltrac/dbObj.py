@@ -1,6 +1,7 @@
 import sqlite3 as sql
 db = sql.connect('caltrac/CalTrac.db',detect_types=sql.PARSE_DECLTYPES)
 c = db.cursor()
+
 class dbHandler(object):
 	def buildTables(self):
 		c.execute('''CREATE TABLE IF NOT EXISTS user(func TEXT UNIQUE, name TEXT,
@@ -9,3 +10,4 @@ class dbHandler(object):
 		portion REAL);''')
 		c.execute('''CREATE TABLE IF NOT EXISTS calendar(date TEXT UNIQUE, total REAL,
 		 avg REAL, len INTEGER);''')
+		

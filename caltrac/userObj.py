@@ -14,12 +14,10 @@ class User(object):
 					self.p.append(i)
 				self.p.pop(0)
 				self.p.extend(None for i in range(len(self.p),6))
-				print self.p
 				if None in self.p:
 					raise IndexError
 				self.data = {'raw':self.p,'name':self.p[0],'height':self.p[1],
 				'weight':self.p[2],'age':self.p[3],'gender':self.p[4],'rating':self.p[5]}
-				print self.data['gender']
 				if self.data['gender'] == 'Male':
 					bmr = 88.362 + (13.397*self.data['weight']) + (4.799*self.data['height']) - (5.677*self.data['age'])
 				elif self.data['gender'] == 'Female':

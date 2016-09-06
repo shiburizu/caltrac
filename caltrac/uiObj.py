@@ -1,4 +1,6 @@
 from kivy.config import Config
+Config.set('graphics','width','320')
+Config.set('graphics','height','480')
 from kivy.core.window import Window
 Window.softinput_mode = 'below_target'
 from kivy.app import App
@@ -19,23 +21,25 @@ from kivy.uix.label import Label
 from datetime import datetime, date, timedelta
 import sqlite3 as sql
 
+#kivyMD
+from kivymd.theming import ThemeManager
+from kivymd.label import MDLabel
+from kivymd.list import TwoLineListItem
+from kivymd.navigationdrawer import NavigationDrawer
+from kivymd.button import MDRaisedButton
+
+#patched KivyMD object
+from bottomsheet import MDListBottomSheet
+
 #calTrac modules
 from dbObj import *
 dbHandler().buildTables()
 from userObj import *
 
-Builder.load_file("caltrac/Cal.kv")
-
-class RootTabs(TabbedPanel):
-	pass
+Builder.load_file("caltrac/CalMD.kv")
 
 class RootScreen(Screen):
 	foodTable = ObjectProperty(None)
-
-	def __init__(self, **kwargs):
-		super(RootScreen, self).__init__(**kwargs)
-		self.foodTable.bind(minimum_height=self.foodTable.setter('height'))
-		self.dateLbl.text = date.isoformat(date.today())
 	def goalUpdate(self,goal):
 		if goal == 'gain':
 			self.kcalTxt.text = 'Kcal target: %s' % (int(float(CalApp.caluser.getDict('bmr'))) + 500)
@@ -47,6 +51,15 @@ class RootScreen(Screen):
 				self.kcalTxt.text = 'Kcal target: 1600'
 			else:
 				self.kcalTxt.text = 'Kcal target: %s' % (int(float(CalApp.caluser.getDict('bmr'))) - 500)
+	def showGoalsSheet(self):
+		bs = MDListBottomSheet()
+		bs.add_item("I want to lose weight.", lambda x: CalApp.Root.goalUpdate('lose'))
+		bs.add_item("I want to maintain my current weight.", lambda x: CalApp.Root.goalUpdate('maintain'))
+		bs.add_item("I want to gain weight.", lambda x: CalApp.Root.goalUpdate('gain'))
+		bs.open()
+	
+	def triggerDummy(self,goal):
+		self.goalUpdate(goal)
 	
 class NewFoodScreen(Screen):
 	def newFoodIns(self,delta):
@@ -65,14 +78,13 @@ class NewFoodScreen(Screen):
 			invalid.open()
 
 class ProfileScreen(Screen):
-
+	genderChoice = 'Male'
 	def setup2(self):
 		try:
 			CalApp.inp = [self.nameInp.text.strip(' \t\n\r'),
 				float(self.heightInp.text),
 				float(self.weightInp.text),int(self.yearsInp.text),
-				str(self.genderInp.text)]
-			print CalApp.inp
+				self.genderChoice]
 			CalApp.sm.current='Profile2'
 
 		except (TypeError,ValueError) as e:
@@ -80,16 +92,43 @@ class ProfileScreen(Screen):
 				content=Label(text='Check your data and try again.'),
 				size_hint=(None, None),size=('250dp','150dp'))
 			invalid.open()
+	def openGenderSelect(self):
+		bs = MDListBottomSheet()
+		bs.add_item("Male", lambda x: CalApp.Profile.changeGender("Male"))
+		bs.add_item("Female", lambda x: CalApp.Profile.changeGender("Female"))
+		bs.open()
+	
+	def changeGender(self, gen):
+		self.genderChoice = gen
+		self.ids['genderInp'].text = self.genderChoice
+		
 
 class Profile2Screen(Screen):
-	rateSpn = ObjectProperty(None)
+	rateChoice = 1
 	
 	def setup3(self):
-		CalApp.inp.append(str(self.rateSpn.text))
+		CalApp.inp.append(str(self.rateChoice))
 		CalApp.triggerUpdate()
+		self.rateChoice = 1
 		CalApp.sm.current = 'Root'
+	
+	def openRateChoice(self):
+		bs = MDListBottomSheet()
+		bs.add_item("1. Little to no exercise", lambda x: CalApp.Profile2.setChoice(1,"1. Little to no exercise"))
+		bs.add_item("2. Light (1-3 days)", lambda x: CalApp.Profile2.setChoice(2,"2. Light (1-3 days)"))
+		bs.add_item("3. Moderate (3-5 days)", lambda x: CalApp.Profile2.setChoice(3,"3. Moderate (3-5 days)"))
+		bs.add_item("4. Heavy (6-7 days)", lambda x: CalApp.Profile2.setChoice(4,"4. Heavy (6-7 days)"))
+		bs.add_item("5. Very heavy (twice per day)", lambda x: CalApp.Profile2.setChoice(5,"5. Very heavy (twice per day)"))
+		bs.open()
+	def setChoice(self,i,txt):
+		self.rateChoice = i
+		self.ids['choiceTxt'].text = "Currently selected: %s \n %s" % (i,txt)
+	
 
-class DelBtn(Button):
+class DelBtn(TwoLineListItem):
+	pass
+
+class SandwichMenu(NavigationDrawer):
 	pass
 		
 class DeleteScreen(Screen):
@@ -103,40 +142,55 @@ class DeleteScreen(Screen):
 		l = c.execute("SELECT rowid, * FROM foods WHERE date = ?", (date.isoformat(date.today() - timedelta(delta)),)).fetchall()
 		self.deleteTable.clear_widgets()
 		for it in l:
-			self.deleteTable.add_widget(DelBtn(text='%s - x%s    kcal: %s' % (it[1],str(it[4]).replace('.0',''),str(it[3]).replace('.0','')),
-			id = str(it[0])))
+			self.deleteTable.add_widget(DelBtn(text='%s - x%s' % (it[1],str(it[4]).replace('.0','')),
+				secondary_text='kcal: %s' % str(it[3]).replace('.0',''),id = str(it[0])))
+
+			
+class LangScreen(Screen):
+	#options are en and es
+	def setLang(self,lang):
+		c.execute("INSERT OR REPLACE INTO user(lang) VALUES(?)",(lang,))
+		c.commit()
 
 class CaltracApp(App):
 	def __init__(self, **kwargs):
 		super(CaltracApp, self).__init__(**kwargs)
 		self.sm = ScreenManager()
 		self.inp = []
-		self.ratingText = '''How would you describe the amount of exercise you do?
-1. Little to no exercise
-2. Light exercise (1-3 days per week)
-3. Moderate exercise (3-5 days per week)
-4. Heavy exercise (6-7 days per week)
-5. Very heavy exercise (twice per day, extra heavy workouts)'''
+		self.theme_cls = ThemeManager()
+		self.theme_cls.theme_style = 'Dark'
+		self.theme_cls.primary_palette = 'Green'
+		self.theme_cls.accent_palette = 'Pink'
+		self.nav_drawer = ObjectProperty()
 
 	def build(self):
 		self.caluser = User()
 		self.dayDelta = 0
+		self.nav_drawer = SandwichMenu()
 		self.Root = RootScreen()
 		self.NewFood = NewFoodScreen()
 		self.Profile = ProfileScreen()
 		self.Profile2 = Profile2Screen()
 		self.DeleteScreen = DeleteScreen()
+		self.LangScreen = LangScreen()
 		self.sm.add_widget(self.Root)
 		self.sm.add_widget(self.NewFood)
 		self.sm.add_widget(self.Profile)
 		self.sm.add_widget(self.Profile2)
 		self.sm.add_widget(self.DeleteScreen)
+		self.sm.add_widget(self.LangScreen)
 		return self.sm
 
 	def on_start(self):
 		if self.caluser.p == [None,None,None,None,None,None]:
-			self.SetupProfile()
+			self.SetupProfile() #todo transition to setlang
 		self.updateJournal()
+	
+	def on_pause(self):
+		return True
+	
+	def on_resume(self):
+		pass
 		
 	def deltaUpdate(self,val):
 		self.dayDelta += val
@@ -145,14 +199,18 @@ class CaltracApp(App):
 	def deltaReset(self):
 		self.dayDelta = 0
 		self.updateJournal()
+	
+	def selectLang(self):
+		self.sm.current= 'SetLang'
 
-	def SetupProfile(self):
+	def SetupProfile(self,lang=""): #todo
+		#lc.execute("INSERT OR REPLACE INTO user(lang) VALUES (?)", (lang,))
+		self.Profile.ids['profileToolbar'].left_action_items = []
 		self.sm.current = 'Profile'
 	
 	def triggerUpdate(self):
 		self.caluser.updateProfile(self.inp)
-		print self.inp
-		self.Root.userPnl.text = self.caluser.getDict('name')
+		self.Root.toolbar.title = "CalTrac - %s" % date.isoformat(date.today())
 		self.Root.nameLbl.text = 'About ' + self.caluser.getDict('name')
 		self.Root.heightLbl.text = 'Height: ' + self.caluser.getDict('height')
 		self.Root.weightLbl.text = 'Weight: ' + self.caluser.getDict('weight')
@@ -160,7 +218,8 @@ class CaltracApp(App):
 		self.Root.genderLbl.text = 'Gender: ' + self.caluser.getDict('gender')
 		self.Root.ratingLbl.text = 'Rating: ' + self.caluser.getDict('rating')
 		self.Root.kcalTxt.text = 'Kcal target: ' + str(int(float(self.caluser.getDict('bmr'))))
-	
+		self.nav_drawer.ids['nameBtn'].text = self.caluser.getDict('name')
+		self.Profile.ids['profileToolbar'].left_action_items = [['arrow-left', lambda x: self.changeScreens('Root')]]
 	def DeleteItems(self,delta):
 		self.DeleteScreen.listDelete(delta)
 		self.sm.current = 'DeleteFood'
@@ -169,13 +228,10 @@ class CaltracApp(App):
 		l = c.execute("SELECT * FROM foods WHERE date = ?", (date.isoformat(date.today()-timedelta(delta)),)).fetchall()
 		stats = []
 		self.Root.foodTable.clear_widgets()
-		self.Root.foodTable.add_widget(Button(text='Items'))
-		self.Root.foodTable.add_widget(Button(text='KCAL'))
 		for it in l:
-			self.Root.foodTable.add_widget(Label(text='%s - x%s' % (it[0],str(it[3]).replace('.0',''))))
-			self.Root.foodTable.add_widget(Label(text=str(it[2]).replace('.0','')))
+			self.Root.foodTable.add_widget(TwoLineListItem(text='%s - x%s' % (it[0],str(it[3]).replace('.0','')),secondary_text="%s kcal" % str(it[2]).replace('.0','')))
 			stats.append(it[2])
-		self.Root.dateLbl.text = date.isoformat(date.today() - timedelta(delta))
+		self.Root.toolbar.title = "CalTrac - %s" % date.isoformat(date.today() - timedelta(delta))
 		if delta != 0:
 			self.Root.tmrwBtn.disabled = False
 		else:
@@ -248,10 +304,17 @@ class CaltracApp(App):
 		t = int(list(c.execute("SELECT TOTAL(kcal) FROM foods WHERE date = ?",(date.isoformat(date.today()-timedelta(delta)),)).fetchone())[0])
 		self.Root.totalTxt.text = 'Kcal intake: %s' % t
 	def deleteEntry(self,i):
+		date = list(c.execute("SELECT * FROM foods WHERE rowid = ?",(i,)).fetchone())[1]
+		c.execute("DELETE FROM calendar WHERE date = ?",(date,))
 		c.execute("DELETE FROM foods WHERE rowid = ?", (i,))
 		db.commit()
 		self.updateJournal(self.dayDelta)
 		self.sm.current = 'Root'
-
+	def getLocalTxt(self,lang,txt):
+		return unicode(list(lc.execute("SELECT %s FROM dictionary WHERE id = ?" % lang,(txt,)).fetchone())[0])
+		#todo replace with dictionary func
+	def changeScreens(self,screen):
+		self.sm.current = screen
+	
 CalApp = CaltracApp()
 

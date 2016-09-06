@@ -1,0 +1,371 @@
+#:import Toolbar kivymd.toolbar.Toolbar
+#:import NavigationDrawer kivymd.navigationdrawer.NavigationDrawer
+#:import MDLabel kivymd.label.MDLabel
+#:import MDRaisedButton kivymd.button.MDRaisedButton
+#:import MDFlotingActionButton kivymd.button.MDFloatingActionButton
+#:import MDIconButton kivymd.button.MDIconButton
+#:import MDList kivymd.list.MDList
+#:import MDAccordion kivymd.accordion.MDAccordion
+#:import MDAccordionItem kivymd.accordion.MDAccordionItem
+#:import MDTab kivymd.tabs.MDTab
+#:import MDTabbedPanel kivymd.tabs.MDTabbedPanel
+#:import MDCard kivymd.card.MDCard
+#:import SingleLineTextField kivymd.textfields.SingleLineTextField
+#:import TwoLineListItem kivymd.list.TwoLineListItem
+
+<RootScreen>:
+	
+	name: 'Root'
+	foodTable: foodTable
+
+	nameLbl: nameLbl
+	weightLbl: weightLbl
+	heightLbl: heightLbl
+	ageLbl: ageLbl
+	genderLbl: genderLbl
+	ratingLbl: ratingLbl
+	userPnl: userPnl
+	kcalTxt: kcalTxt
+	totalTxt: totalTxt
+	weekTotalTxt: weekTotalTxt
+	weekAvgTxt: weekAvgTxt
+	weekLenTxt: weekLenTxt
+	monthTotalTxt: monthTotalTxt
+	monthAvgTxt: monthAvgTxt
+	monthLenTxt: monthLenTxt
+	weekGraphLayout: weekGraphLayout
+	monthGraphLayout: monthGraphLayout
+	toolbar: toolbar
+	tmrwBtn: tmrwBtn
+	BoxLayout:
+		orientation: 'vertical'
+		Toolbar:
+			id: toolbar
+			title: 'CalTrac'
+			background_color: app.theme_cls.primary_color
+			left_action_items: [['menu', lambda x: app.nav_drawer.toggle()]]
+		ScreenManager:
+			id:rootScrnMgr
+			Screen:
+				name: 'journalScrn'
+				BoxLayout:
+					orientation: 'vertical'
+					GridLayout:
+						size_hint_y: .1
+						cols: 4
+						MDFlatButton:
+							text: 'Yesterday'
+							on_press: app.deltaUpdate(1)
+							font_size: '12sp'
+							size_hint: (1,1)
+						MDFlatButton:
+							text: 'Today'
+							on_press: app.deltaReset()
+							font_size: '12sp'
+							size_hint: (1,1)
+						MDFlatButton:
+							id: tmrwBtn
+							text: 'Tomorrow'
+							on_press: app.deltaUpdate(-1)
+							disabled: True
+							font_size: '12sp'
+							size_hint: (1,1)
+					MDCard:
+						size_hint_y: .1
+						GridLayout:
+							rows: 1
+							BoxLayout:
+								size_hint_x: 0.6
+								orientation: 'horizontal'
+								MDLabel:
+									id: totalTxt
+									text: 'TOTAL'
+									theme_text_color: 'Primary'
+									halign: 'center'
+									font_size: '14sp'
+								MDLabel:
+									id: kcalTxt
+									text: 'Kcal target: ' + str(int(float(app.caluser.getDict('bmr'))))
+									theme_text_color: 'Primary'
+									halign: 'center'
+									font_size: '14sp'
+					ScrollView:
+						size_hint:(1,.8)
+						MDList:
+							padding: 0
+							id: foodTable
+
+				RelativeLayout:
+					MDFloatingActionButton:
+						icon:                'more-vert'
+						size_hint:            None, None
+						size:                sp(56), sp(56)
+						opposite_colors:    True
+						elevation_normal:    8
+						pos_hint:            {'center_x': 0.9, 'center_y': 0.1}
+						on_press: root.showGoalsSheet()
+					MDFloatingActionButton:
+						icon:                'delete'
+						size_hint:            None, None
+						size:                sp(56), sp(56)
+						opposite_colors:    True
+						elevation_normal:    8
+						pos_hint:            {'center_x': 0.7, 'center_y': 0.1}
+						on_press: app.DeleteItems(app.dayDelta)
+					MDFloatingActionButton:
+						icon:                'plus'
+						size_hint:            None, None
+						size:                sp(56), sp(56)
+						opposite_colors:    True
+						elevation_normal:    8
+						pos_hint:            {'center_x': 0.5, 'center_y': 0.1}
+						on_press: root.manager.current = 'NewFood'
+			Screen:
+				name: 'statsScrn'
+				MDTabbedPanel:
+					tab_display_mode: 'text'
+					MDTab:
+						text: 'Past 7 Days'
+						name: 'seven'
+						BoxLayout:
+							orientation: 'vertical'
+							BoxLayout:
+								orientation: 'vertical'
+								size_hint_y: 4
+								Label:
+									id: weekTotalTxt
+									text: 'week Total'
+								Label:
+									id: weekAvgTxt
+									text: 'week AVG'
+								Label:
+									id: weekLenTxt
+									text: 'week Len'
+							MDCard:
+								size_hint_y: 6
+								orientation: 'vertical' 
+								id: weekGraphLayout
+					MDTab:
+						text: 'Past 30 Days'
+						name: 'thirty'
+						BoxLayout:
+							orientation: 'vertical'
+							BoxLayout:
+								orientation: 'vertical'
+								size_hint_y: 4
+								Label:
+									id: monthTotalTxt
+									text: 'month Total'
+								Label:
+									id: monthAvgTxt
+									text: 'month AVG'
+								Label:
+									id: monthLenTxt
+									text: 'month Len'
+							MDCard:
+								size_hint_y: 6
+								orientation: 'vertical' 
+								id: monthGraphLayout
+			Screen:
+				id: userPnl
+				name: 'profileScrn'
+				BoxLayout:
+					orientation: 'vertical'
+					padding: 10
+					MDCard:
+						orientation: 'vertical'
+						MDLabel:
+							theme_text_color: 'Primary'
+							id: nameLbl
+							text: 'About ' + app.caluser.getDict('name')
+							font_size: '36sp'
+							halign: 'center'
+					MDLabel:
+						theme_text_color: 'Primary'
+						id: heightLbl
+						text: 'Height: ' + app.caluser.getDict('height')
+						halign: 'center'
+						font_size: '16sp'
+					MDLabel:
+						theme_text_color: 'Primary'
+						id: weightLbl
+						text: 'Weight: ' + app.caluser.getDict('weight')
+						halign: 'center'
+						font_size: '16sp'
+					MDLabel:
+						theme_text_color: 'Primary'
+						id: ageLbl
+						text: 'Age: ' + app.caluser.getDict('age')
+						halign: 'center'
+						font_size: '16sp'
+					MDLabel:
+						theme_text_color: 'Primary'
+						id: genderLbl
+						text: 'Gender: ' + app.caluser.getDict('gender')
+						halign: 'center'
+						font_size: '16sp'
+					MDLabel:
+						theme_text_color: 'Primary'
+						id: ratingLbl
+						text: 'Rating: ' + app.caluser.getDict('rating')
+						halign: 'center'
+						font_size: '16sp'
+					MDCard:
+						orientation: 'vertical'
+						MDRaisedButton:
+							text: 'Reconfigure'
+							on_press: root.manager.current = 'Profile'
+							pos_hint:            {'center_x': 0.5}
+
+<NewFoodScreen>
+	name: 'NewFood'
+	foodInp: foodInp
+	kcalInp: kcalInp
+	portionInp: portionInp
+	BoxLayout:
+		orientation: 'vertical'
+		Toolbar:
+			title: 'Add a new food...'
+			background_color: app.theme_cls.primary_color
+			left_action_items: [['arrow-left', lambda x: app.changeScreens('Root')]]
+		GridLayout:
+			cols: 1
+			spacing: ('0dp','10dp')
+			row_default_height: '50dp'
+			row_force_default: True
+			padding: ('50dp','0dp')
+			SingleLineTextField:
+				id: foodInp
+				hint_text: "Food name..."
+			SingleLineTextField:
+				id: kcalInp
+				hint_text: "Kcal count per serving..."
+			SingleLineTextField:
+				id: portionInp
+				hint_text: "Portion count..."
+			Label:
+			MDRaisedButton:
+				text: 'Accept'
+				on_press: root.newFoodIns(app.dayDelta)		
+<ProfileScreen>
+	name: 'Profile'
+	nameInp: nameInp
+	heightInp: heightInp
+	genderInp: genderInp
+	yearsInp: yearsInp
+	weightInp: weightInp
+	BoxLayout:
+		orientation: 'vertical'
+		Toolbar:
+			id: profileToolbar
+			title: 'Configure your profile...'
+			background_color: app.theme_cls.primary_color
+			left_action_items: [['arrow-left', lambda x: app.changeScreens('Root')]]
+		GridLayout:
+			cols: 1
+			padding: ('50dp','0dp')
+			spacing: ('0dp','10dp')
+			row_default_height: '50dp'
+			SingleLineTextField:
+				id: nameInp
+				hint_text: "Enter your name..."
+			SingleLineTextField:
+				id: heightInp
+				hint_text: "Enter your height in cm..."
+			SingleLineTextField:
+				id: weightInp
+				hint_text: "Enter your weight in kg..."
+			SingleLineTextField:
+				id: yearsInp
+				hint_text: "Enter your age in years..."
+			MDLabel:
+				text: 'Enter your gender.'
+				theme_text_color: 'Primary'
+				halign: 'center'
+				font_size: '16sp'
+			MDRaisedButton:
+				text: 'Male'
+				id: genderInp
+				on_press: root.openGenderSelect()
+			MDRaisedButton:
+				text: 'Accept'
+				on_press: root.setup2()
+<Profile2Screen>
+	name: 'Profile2'
+	BoxLayout:
+		orientation: 'vertical'
+		Toolbar:
+			title: 'Configure your profile...'
+			background_color: app.theme_cls.primary_color
+		GridLayout:
+			cols: 1
+			padding: ('50dp','0dp')
+			spacing: ('0dp','8dp')
+			row_default_height: '50dp'
+			Label:
+			MDLabel:
+				text: 'How much exercise do you do in a week?'
+				##app.getLocalTxt('es','ratingText') todo write getdict for this
+				font_size: '15sp'
+				halign: 'center'
+			MDRaisedButton:				
+				text: 'Choose'
+				on_press: root.openRateChoice()
+			MDLabel:
+				id: choiceTxt
+				text: 'Currently selected: 1 \n 1. Little to no exercise'
+				halign: 'center'
+			Label:
+			Label:
+			MDRaisedButton:
+				text: 'Confirm'
+				on_press: root.setup3()
+<DeleteScreen>
+	name: 'DeleteFood'
+	deleteTable: deleteTable
+	BoxLayout:
+		orientation: 'vertical'
+		Toolbar:
+			title: 'Delete an item'
+			background_color: app.theme_cls.primary_color
+			left_action_items: [['arrow-left', lambda x: app.changeScreens('Root')]]
+		ScrollView:
+			MDList:
+				id: deleteTable
+<ConfigScreen>
+	name: 'ConfigScreen'
+
+<LangScreen>
+	name: 'SetLang'
+	GridLayout:
+		cols: 1
+		padding: ('50dp','0dp')
+		spacing: ('0dp','10dp')
+		row_default_height: '30dp'
+		Button:
+			##todo write dict update func
+			text: 'EN'
+			##on_press: app.updateLang(self.text)
+		Button:
+			text: 'ES'
+			##on_press: app.updateLang(self.text)
+			
+<SandwichMenu>
+	title: "CalTrac"
+	NavigationDrawerIconButton
+		icon: 'circle'
+		text: "Journal"
+		on_release: app.Root.ids['rootScrnMgr'].current = 'journalScrn'
+	NavigationDrawerIconButton:
+		icon: 'circle'
+		text: "Statistics"
+		on_release: app.Root.ids['rootScrnMgr'].current = 'statsScrn'
+	NavigationDrawerIconButton:
+		id: nameBtn
+		icon: 'circle'
+		text: app.caluser.getDict('name')
+		on_release: app.Root.ids['rootScrnMgr'].current = 'profileScrn'
+
+<DelBtn@TwoLineListItem>
+	on_press: app.deleteEntry(self.id)
+	
