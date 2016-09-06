@@ -4,10 +4,10 @@
 title = CalTrac
 
 # (str) Package name
-package.name = caltrac
+package.name = caltracappdonate
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = voltisoft.caltrac
+package.domain = voltisoft.apps
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -28,7 +28,7 @@ source.include_exts = py,png,jpg,kv,atlas
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.1
+version = 0.1.2
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -36,14 +36,14 @@ version = 0.1
 
 # (list) Application requirements
 # comma seperated e.g. requirements = sqlite3,kivy
-requirements = numpy,sqlite3,datetime,kivy
+requirements = numpy,sqlite3,datetime,kivy,git+https://gitlab.com/kivymd/KivyMD.git
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
 # requirements.source.kivy = ../../kivy
 
 # (list) Garden requirements
-#garden_requirements =
+garden_requirements = recycleview
 
 # (str) Presplash of the application
 presplash.filename = %(source.dir)s/data/presplash.png
@@ -75,10 +75,10 @@ fullscreen = 0
 #android.permissions = INTERNET
 
 # (int) Android API to use
-#android.api = 19
+android.api = 19
 
 # (int) Minimum API required
-#android.minapi = 9
+android.minapi = 9
 
 # (int) Android SDK version to use
 #android.sdk = 20
