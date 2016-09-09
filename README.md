@@ -1,8 +1,6 @@
-# caltrac-kivy
+# CalTrac
 Kivy rework of the Caltrac project. Requires the latest Kivy and Python 2. This project is not completely functional and should be considered heavily WIP. The stable Tkinter release can be found here: https://shiburizu.github.io/caltrac
 NOTE: this project generates a file Caltrac.db which is part of the .gitignore -- this file contains user-specific info.
-
-CalTrac-kivy is soon to be replacing the tkinter caltrac repo. Stay tuned.
 
 ![alt text](http://i.imgur.com/O9W23Al.png "CalTrac")
 ### Experimental Calorie recommendation and tracker program.
