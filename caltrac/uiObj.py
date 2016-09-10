@@ -108,9 +108,14 @@ class Profile2Screen(Screen):
 	
 	def setup3(self):
 		CalApp.inp.append(str(self.rateChoice))
-		CalApp.triggerUpdate()
+		#CalApp.triggerUpdate()
 		self.rateChoice = 1
-		CalApp.sm.current = 'Root'
+		if CalApp.Profile.genderChoice == 'Female':
+			CalApp.sm.current = 'FemScreen'
+		else:
+			CalApp.inp.append('0')
+			CalApp.triggerUpdate()
+			CalApp.sm.current = 'Root'
 	
 	def openRateChoice(self):
 		bs = MDListBottomSheet()
@@ -124,11 +129,30 @@ class Profile2Screen(Screen):
 		self.rateChoice = i
 		self.ids['choiceTxt'].text = "Currently selected: %s \n %s" % (i,txt)
 	
+class FemOptionScreen(Screen):
+	
+	def setup4(self):
+		if self.ids['pregSwitch'].active == True:
+			CalApp.inp.append("1")
+			CalApp.triggerUpdate()
+			CalApp.sm.current = 'Root'
 
 class DelBtn(TwoLineListItem):
 	pass
 
+class RecipeBtn(TwoLineListItem):
+	pass
+
 class SandwichMenu(NavigationDrawer):
+	pass
+
+class ConfigScreen(Screen):
+	pass
+
+class RecipeScreen(Screen):
+	pass
+	
+class RecipeContentScreen(Screen):
 	pass
 		
 class DeleteScreen(Screen):
@@ -144,8 +168,7 @@ class DeleteScreen(Screen):
 		for it in l:
 			self.deleteTable.add_widget(DelBtn(text='%s - x%s' % (it[1],str(it[4]).replace('.0','')),
 				secondary_text='kcal: %s' % str(it[3]).replace('.0',''),id = str(it[0])))
-
-			
+		
 class LangScreen(Screen):
 	#options are en and es
 	def setLang(self,lang):
@@ -173,16 +196,25 @@ class CaltracApp(App):
 		self.Profile2 = Profile2Screen()
 		self.DeleteScreen = DeleteScreen()
 		self.LangScreen = LangScreen()
+		self.FemScreen = FemOptionScreen()
+		self.RecipeScreen = RecipeScreen()
+		self.ConfigScreen = ConfigScreen()
+		self.RecipeContent = RecipeContentScreen()
 		self.sm.add_widget(self.Root)
 		self.sm.add_widget(self.NewFood)
 		self.sm.add_widget(self.Profile)
 		self.sm.add_widget(self.Profile2)
 		self.sm.add_widget(self.DeleteScreen)
 		self.sm.add_widget(self.LangScreen)
+		self.sm.add_widget(self.FemScreen)
+		self.sm.add_widget(self.RecipeScreen)
+		self.sm.add_widget(self.ConfigScreen)
+		self.sm.add_widget(self.RecipeContent)
 		return self.sm
 
 	def on_start(self):
-		if self.caluser.p == [None,None,None,None,None,None]:
+		self.updateRecipes()
+		if self.caluser.p == [None,None,None,None,None,None,None]:
 			self.SetupProfile() #todo transition to setlang
 		self.updateJournal()
 	
@@ -191,6 +223,18 @@ class CaltracApp(App):
 	
 	def on_resume(self):
 		pass
+	
+	def updateRecipes(self):
+		recipes = lc.execute("SELECT name,kcal FROM recipes").fetchall()
+		for i in recipes:
+			recipeIt = RecipeBtn(text=str(i[0]),secondary_text=str(i[1]))
+			self.Root.ids['recipeLst'].add_widget(recipeIt)
+	
+	def showRecipe(self,name):
+		recipe = lc.execute("SELECT kcal,content FROM recipes WHERE name = ?",(name,)).fetchall()
+		self.RecipeContent.ids['titlebar'].title = name
+		self.RecipeContent.ids['contentBox'].text=recipe[0][1]
+		self.sm.current = 'RecipeContent'
 		
 	def deltaUpdate(self,val):
 		self.dayDelta += val
@@ -215,9 +259,13 @@ class CaltracApp(App):
 		self.Root.heightLbl.text = 'Height: ' + self.caluser.getDict('height')
 		self.Root.weightLbl.text = 'Weight: ' + self.caluser.getDict('weight')
 		self.Root.ageLbl.text = 'Age: ' + self.caluser.getDict('age')
-		self.Root.genderLbl.text = 'Gender: ' + self.caluser.getDict('gender')
+		if self.caluser.getDict('preg') == '0':
+			self.Root.genderLbl.text = 'Gender: ' + self.caluser.getDict('gender')
+			self.Root.kcalTxt.text = 'Kcal target: ' + str(int(float(self.caluser.getDict('bmr'))))
+		else:
+			self.Root.genderLbl.text = 'Gender: %s (Pregnant)' % self.caluser.getDict('gender')	
+			self.Root.kcalTxt.text = 'Kcal target: ' + str(int(float(self.caluser.getDict('bmr')))+350)	
 		self.Root.ratingLbl.text = 'Rating: ' + self.caluser.getDict('rating')
-		self.Root.kcalTxt.text = 'Kcal target: ' + str(int(float(self.caluser.getDict('bmr'))))
 		self.nav_drawer.ids['nameBtn'].text = self.caluser.getDict('name')
 		self.Profile.ids['profileToolbar'].left_action_items = [['arrow-left', lambda x: self.changeScreens('Root')]]
 	def DeleteItems(self,delta):

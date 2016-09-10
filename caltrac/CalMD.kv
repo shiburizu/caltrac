@@ -12,12 +12,12 @@
 #:import MDCard kivymd.card.MDCard
 #:import SingleLineTextField kivymd.textfields.SingleLineTextField
 #:import TwoLineListItem kivymd.list.TwoLineListItem
+#:import MDSwitch kivymd.selectioncontrols.MDSwitch
 
 <RootScreen>:
 	
 	name: 'Root'
 	foodTable: foodTable
-
 	nameLbl: nameLbl
 	weightLbl: weightLbl
 	heightLbl: heightLbl
@@ -216,7 +216,26 @@
 							text: 'Reconfigure'
 							on_press: root.manager.current = 'Profile'
 							pos_hint:            {'center_x': 0.5}
+			Screen:
+				name: 'ConfigScreen'
+				BoxLayout:
+					orientation: 'vertical'
 
+			Screen:
+				name: 'RecipeScreen'
+				BoxLayout:
+					orientation: 'vertical'
+					MDCard:
+						size_hint_y: .1
+						orientation: 'horizontal'
+						MDLabel:
+							text: 'Recipes...'
+							halign: 'center'
+					MDList:
+						size_hint_y: .9
+						id: recipeLst
+						
+					
 <NewFoodScreen>
 	name: 'NewFood'
 	foodInp: foodInp
@@ -332,9 +351,40 @@
 		ScrollView:
 			MDList:
 				id: deleteTable
-<ConfigScreen>
-	name: 'ConfigScreen'
+<FemOptionScreen>
+	name: 'FemScreen'
+	BoxLayout:
+		orientation: 'vertical'
+		Toolbar:
+			title: 'Delete an item'
+			background_color: app.theme_cls.primary_color
+			left_action_items: [['arrow-left', lambda x: app.changeScreens('Profile')]]
+		BoxLayout:
+			orientation: 'vertical'
+			GridLayout:
+				padding: ('25dp','0dp')
+				spacing: ('25dp','0dp')
+				row_default_height: '50dp'
+				size_hint_y: 7
+				cols: 2
+				MDSwitch:
+					id: pregSwitch
+					active: False
+					size_hint_x: .2
+					size_hint_y: None				
+					pos_hint:    {'center_x': 0.75, 'center_y': 0.5}
 
+				MDLabel:
+					halign: 'center'
+					text: 'Are you currently pregnant?'
+			GridLayout:
+				padding: ('50dp','0dp')
+				spacing: ('0dp','8dp')
+				row_default_height: '50dp'
+				cols: 1
+				MDRaisedButton:
+					text: 'Confirm'
+					on_press: root.setup4()
 <LangScreen>
 	name: 'SetLang'
 	GridLayout:
@@ -349,7 +399,29 @@
 		Button:
 			text: 'ES'
 			##on_press: app.updateLang(self.text)
-			
+
+<RecipeContentScreen>
+	name: 'RecipeContent'
+	BoxLayout:
+		orientation: 'vertical'
+		Toolbar:
+			id: titlebar
+			background_color: app.theme_cls.primary_color
+			left_action_items: [['arrow-left', lambda x: app.changeScreens('Root')]]
+		BoxLayout:
+			orientation: 'vertical'
+			padding: dp(10),dp(15)
+			MDCard:
+				size_hint_y: .9
+				padding: dp(10),dp(15)
+				MDLabel:
+					halign: 'left'
+					id: contentBox
+					valign: 'top'
+					text_size: self.size	
+			MDFlatButton:
+				size_hint_y: .1
+				text: 'Add to my journal'
 <SandwichMenu>
 	title: "CalTrac"
 	NavigationDrawerIconButton
@@ -365,7 +437,19 @@
 		icon: 'circle'
 		text: app.caluser.getDict('name')
 		on_release: app.Root.ids['rootScrnMgr'].current = 'profileScrn'
+	NavigationDrawerIconButton:
+		id: nameBtn
+		icon: 'circle'
+		text: "Recipes"
+		on_release: app.Root.ids['rootScrnMgr'].current = 'RecipeScreen'
+	NavigationDrawerIconButton:
+		id: nameBtn
+		icon: 'circle'
+		text: "Options"
+		on_release: app.Root.ids['rootScrnMgr'].current = 'ConfigScreen'
 
 <DelBtn@TwoLineListItem>
 	on_press: app.deleteEntry(self.id)
 	
+<RecipeBtn@TwoLineListItem>
+	on_release: app.showRecipe(self.text)
