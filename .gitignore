@@ -216,4 +216,4 @@ pip-log.txt
 .mr.developer.cfg
 
 # ignoring the main .db since that is for each user
-Caltrac.db
+user.db
